@@ -17,6 +17,7 @@ router.post('/upload-file', controller.upload, (req, res) => {
   console.log(variables);
 
   const image = __basedir + "/resources/temp/" + req.file.originalname;
+  console.log(image);
   const originalName = req.file.originalname;
 
   var data = '';
@@ -79,9 +80,9 @@ router.post('/upload-file', controller.upload, (req, res) => {
           fs.unlink(image, (err) => {
             if (err) {
               console.error(err);
-              res.send(500).send(error);
+              res.status(500).send(error);
             }
-            res.status(200).send(json);
+          res.status(200).send(json);
           })
         } else {
           res.status(500).send({
