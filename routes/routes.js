@@ -10,13 +10,14 @@ const router = express.Router();
 
 router.post('/upload-file', (req, res) => {
   const url = `${MONDAY_URL}/file`;
-
   const query = 'mutation add_file($file: File!, $itemId: Int!) {add_file_to_column (item_id: $itemId, column_id:"files" file: $file) {id}}';
+  console.log('BODY');
+  console.log(req.body);
   const map = req.body.map;
   const variables = req.body.variables;
   const hasFile = req.files.length > 0;
   console.log(variables);
-  console.log(req.files[0]);
+  console.log(req.files);
 
   console.log(hasFile);
 
@@ -74,10 +75,14 @@ router.post('/upload-file', (req, res) => {
       .then(json => {
         console.log(json)
         if (json.data && json.data.add_file_to_column && json.data.add_file_to_column.id) {
-          return res.status(200).send(json);
+          return res.status(200).send({
+            ...json,
+            fileName: originalName,
+          });
         } else {
           return res.status(500).send({
             error: `Couldn\'t upload image ${originalName}`,
+            fileName: originalName,
           });
         }
       })
