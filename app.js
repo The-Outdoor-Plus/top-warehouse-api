@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const cors = require('cors');
 const routes = require('./routes/routes');
+const serverless = require('serverless-http');
 
 const PORT = process.env.PORT || 3000;
 
@@ -20,3 +21,5 @@ app.use('/api', routes);
 app.listen(PORT, () => {
   console.log("Server listening on PORT: ", PORT);
 });
+
+// module.exports.handler = serverless(app);

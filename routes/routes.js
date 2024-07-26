@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.post('/upload-file', (req, res) => {
   const url = `${MONDAY_URL}/file`;
-  const query = 'mutation add_file($file: File!, $itemId: Int!) {add_file_to_column (item_id: $itemId, column_id:"files" file: $file) {id}}';
+  const query = 'mutation add_file($file: File!, $itemId: ID!) {add_file_to_column (item_id: $itemId, column_id:"files" file: $file) {id}}';
   console.log('BODY');
   console.log(req.body);
   const map = req.body.map;
