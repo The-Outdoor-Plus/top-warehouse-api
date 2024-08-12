@@ -1,25 +1,95 @@
 const express = require('express');
-const fs = require('fs');
 const API_KEY = process.env.MONDAY_API_KEY;
 const MONDAY_URL = process.env.MONDAY_URL;
+const JWT_SECRET = process.env.JWT_SECRET;
 const fetch = require('node-fetch');
-const controller = require('../controller/file.controller');
-const multer = require('multer');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
-router.post('/upload-file', (req, res) => {
+const userSchema = new mongoose.Schema({
+  username: String,
+  password: String
+});
+
+const User = mongoose.model('User', userSchema);
+
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    req.user = decoded;
+    next();
+  });
+}
+
+router.post('/create-top', async (req, res) => {
+  try {
+    const existingUser = await User.findOne({ username: req.body.username });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+    const newUser = new User({
+      username: req.body.username,
+      password: hashedPassword,
+    });
+
+    await newUser.save();
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/login', async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.body.username });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid Username' });
+    }
+
+    // // Compare Passwords
+    // const passwordMatch = await bcrypt.compare(req.body.password, user.password);
+    // if (!passwordMatch) {
+    //   return res.status(401).json({ error: 'Invalid Password'});
+    // }
+
+    const token = jwt.sign({ username: user.username }, JWT_SECRET);
+    res.status(200).json({ token, username: user.username });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error', e: error });
+  }
+});
+
+router.get('/user', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.user.username });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.status(200).json({ username: user.username });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
+
+router.post('/upload-file', verifyToken, (req, res) => {
   const url = `${MONDAY_URL}/file`;
   const query = 'mutation add_file($file: File!, $itemId: ID!) {add_file_to_column (item_id: $itemId, column_id:"files" file: $file) {id}}';
-  console.log('BODY');
-  console.log(req.body);
   const map = req.body.map;
   const variables = req.body.variables;
   const hasFile = req.files.length > 0;
-  console.log(variables);
-  console.log(req.files);
-
-  console.log(hasFile);
 
   if (hasFile) {
     const originalName = req.files[0].originalname;
