@@ -6,6 +6,8 @@ const routes = require('./routes/routes');
 const mongoose = require('mongoose');
 
 const PORT = process.env.PORT || 3000;
+const MONGO_CONN_STRING = process.env.MONGO_CONN_STRING;
+const MONGO_DATABASE = process.env.MONGO_DATABASE;
 
 const app = express();
 const upload = multer();
@@ -13,7 +15,7 @@ const upload = multer();
 global.__basedir = __dirname;
 
 // Connect to MongoDB Database
-mongoose.connect('mongodb://localhost:27017/top-warehouse-api')
+mongoose.connect(`${MONGO_CONN_STRING}${MONGO_DATABASE}`)
 .then(() => {
   console.log('Connected to MongoDB');
 })
