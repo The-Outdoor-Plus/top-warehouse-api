@@ -59,11 +59,11 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid Username' });
     }
 
-    // // Compare Passwords
-    // const passwordMatch = await bcrypt.compare(req.body.password, user.password);
-    // if (!passwordMatch) {
-    //   return res.status(401).json({ error: 'Invalid Password'});
-    // }
+    // Compare Passwords
+    const passwordMatch = await bcrypt.compare(req.body.password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid Password'});
+    }
 
     const token = jwt.sign({ username: user.username }, JWT_SECRET);
     res.status(200).json({ token, username: user.username });
